@@ -51,27 +51,27 @@ const LoginPage = () => {
           <div className="warm-gradient-bg flex h-16 w-16 items-center justify-center rounded-2xl warm-shadow">
             <Flame className="h-8 w-8 text-primary-foreground" />
           </div>
-          <h1 className="font-display text-3xl font-bold text-foreground">MindFuel</h1>
+          <h1 className="font-display text-3xl font-bold text-foreground">Fire Mind</h1>
           <p className="text-center text-muted-foreground">
             I tuoi promemoria motivazionali,<br />sempre con te.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {isSignUp && (
-            <div className="space-y-2">
+          {isSignUp &&
+          <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground">
                 Nome <span className="text-muted-foreground font-normal">(facoltativo)</span>
               </label>
               <Input
-                type="text"
-                placeholder="Come ti chiami?"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="h-12 rounded-xl bg-card text-base"
-              />
+              type="text"
+              placeholder="Come ti chiami?"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="h-12 rounded-xl bg-card text-base" />
+            
             </div>
-          )}
+          }
           <div className="space-y-2">
             <label className="text-sm font-semibold text-foreground">Email *</label>
             <Input
@@ -80,8 +80,8 @@ const LoginPage = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="h-12 rounded-xl bg-card text-base"
-            />
+              className="h-12 rounded-xl bg-card text-base" />
+            
           </div>
           <div className="space-y-2">
             <label className="text-sm font-semibold text-foreground">Password *</label>
@@ -92,14 +92,14 @@ const LoginPage = () => {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="h-12 rounded-xl bg-card text-base"
-            />
+              className="h-12 rounded-xl bg-card text-base" />
+            
           </div>
           <Button
             type="submit"
             className="warm-gradient-bg h-12 w-full rounded-xl text-base font-bold text-primary-foreground warm-shadow hover:opacity-90 transition-opacity"
-            disabled={!email.trim() || !password.trim() || isLoading}
-          >
+            disabled={!email.trim() || !password.trim() || isLoading}>
+            
             {isLoading ? "Caricamento..." : isSignUp ? "Crea account" : "Accedi"}
           </Button>
         </form>
@@ -108,14 +108,14 @@ const LoginPage = () => {
           {isSignUp ? "Hai già un account?" : "Non hai un account?"}{" "}
           <button
             onClick={() => setIsSignUp(!isSignUp)}
-            className="font-semibold text-primary hover:underline"
-          >
+            className="font-semibold text-primary hover:underline">
+            
             {isSignUp ? "Accedi" : "Registrati"}
           </button>
         </p>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default LoginPage;
