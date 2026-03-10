@@ -19,6 +19,7 @@ const MessagesPage = () => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const initialLoadDone = useRef(false);
 
   useEffect(() => {
     const fetch = async () => {
