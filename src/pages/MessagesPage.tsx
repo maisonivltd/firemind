@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,7 @@ import { Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { playMessageSent, playMessageReceived } from "@/hooks/useNotificationSound";
 
 interface Message {
   id: string;
@@ -18,6 +19,7 @@ const MessagesPage = () => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const initialLoadDone = useRef(false);
 
   useEffect(() => {
     const fetch = async () => {
@@ -26,6 +28,7 @@ const MessagesPage = () => {
         .select("*")
         .order("created_at", { ascending: true });
       if (data) setMessages(data);
+      initialLoadDone.current = true;
     };
     fetch();
 
@@ -33,7 +36,12 @@ const MessagesPage = () => {
     const channel = supabase
       .channel("messages")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
-        setMessages((prev) => [...prev, payload.new as Message]);
+        const msg = payload.new as Message;
+        setMessages((prev) => [...prev, msg]);
+        // Play sound only for incoming messages (admin replies), not our own sends
+        if (initialLoadDone.current && msg.from_role !== "user") {
+          playMessageReceived();
+        }
       })
       .subscribe();
 
@@ -47,6 +55,7 @@ const MessagesPage = () => {
       .insert({ text: newMessage.trim(), from_role: "user", user_id: user.id });
     if (error) { toast.error("Errore nell'invio"); return; }
     setNewMessage("");
+    playMessageSent();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
