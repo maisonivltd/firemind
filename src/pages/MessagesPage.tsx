@@ -55,6 +55,7 @@ const MessagesPage = () => {
       .insert({ text: newMessage.trim(), from_role: "user", user_id: user.id });
     if (error) { toast.error("Errore nell'invio"); return; }
     setNewMessage("");
+    playMessageSent();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
