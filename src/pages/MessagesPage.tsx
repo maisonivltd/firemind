@@ -35,7 +35,12 @@ const MessagesPage = () => {
     const channel = supabase
       .channel("messages")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
-        setMessages((prev) => [...prev, payload.new as Message]);
+        const msg = payload.new as Message;
+        setMessages((prev) => [...prev, msg]);
+        // Play sound only for incoming messages (admin replies), not our own sends
+        if (initialLoadDone.current && msg.from_role !== "user") {
+          playMessageReceived();
+        }
       })
       .subscribe();
 
