@@ -28,6 +28,7 @@ const MessagesPage = () => {
         .select("*")
         .order("created_at", { ascending: true });
       if (data) setMessages(data);
+      initialLoadDone.current = true;
     };
     fetch();
 
