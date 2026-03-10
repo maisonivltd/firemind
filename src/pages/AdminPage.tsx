@@ -76,6 +76,10 @@ const AdminPage = () => {
       created_at: new Date().toISOString(),
     }]);
     setReplyText("");
+    // Send push notification
+    supabase.functions.invoke("send-push-notification", {
+      body: { user_ids: [selectedUser], title: "🔥 Fire Mind", body: replyText.trim(), data: { type: "message" } },
+    });
   };
 
   const sendBroadcast = async () => {
