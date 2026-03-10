@@ -76,6 +76,10 @@ const AdminPage = () => {
       created_at: new Date().toISOString(),
     }]);
     setReplyText("");
+    // Send push notification
+    supabase.functions.invoke("send-push-notification", {
+      body: { user_ids: [selectedUser], title: "🔥 Fire Mind", body: replyText.trim(), data: { type: "message" } },
+    });
   };
 
   const sendBroadcast = async () => {
@@ -90,6 +94,10 @@ const AdminPage = () => {
     toast.success(`Messaggio inviato a ${profiles.length} utenti!`);
     setBroadcastText("");
     fetchMessages();
+    // Send push to all users
+    supabase.functions.invoke("send-push-notification", {
+      body: { user_ids: profiles.map(p => p.user_id), title: "🔥 Fire Mind", body: broadcastText.trim(), data: { type: "broadcast" } },
+    });
   };
 
   if (!isAdmin) {

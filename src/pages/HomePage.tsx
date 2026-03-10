@@ -6,6 +6,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { toast } from "sonner";
 
 interface Reminder {
   id: string;
@@ -18,6 +20,7 @@ const HomePage = () => {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
   const [reminders, setReminders] = useState<Reminder[]>([]);
+  const { isSupported, isSubscribed, subscribe, permission } = usePushNotifications();
 
   const greeting = profile?.name ? `Ciao, ${profile.name}` : "Ciao";
   const hour = new Date().getHours();
@@ -35,9 +38,30 @@ const HomePage = () => {
     fetchReminders();
   }, []);
 
+  // Auto-request push permission on first visit
+  useEffect(() => {
+    if (isSupported && !isSubscribed && permission === "default") {
+      const timer = setTimeout(() => {
+        subscribe().then((ok) => {
+          if (ok) toast.success("Notifiche attivate! 🔔");
+        });
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSupported, isSubscribed, permission, subscribe]);
+
   const handleLogout = async () => {
     await signOut();
     navigate("/login");
+  };
+
+  const handleEnableNotifications = async () => {
+    const ok = await subscribe();
+    if (ok) {
+      toast.success("Notifiche attivate! 🔔");
+    } else {
+      toast.error("Non è stato possibile attivare le notifiche");
+    }
   };
 
   const nextReminder = reminders[0];
@@ -45,6 +69,23 @@ const HomePage = () => {
   return (
     <AppLayout>
       <div className="space-y-6 animate-[fade-in_0.5s_ease-out]">
+        {/* Push notification banner */}
+        {isSupported && !isSubscribed && (
+          <button
+            onClick={handleEnableNotifications}
+            className="w-full rounded-2xl border border-primary/30 bg-primary/5 p-4 flex items-center gap-3 hover:bg-primary/10 transition-colors"
+          >
+            <div className="warm-gradient-bg flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
+              <Bell className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-sm font-bold text-foreground">Attiva le notifiche</p>
+              <p className="text-xs text-muted-foreground">Ricevi promemoria e messaggi sul telefono</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-primary" />
+          </button>
+        )}
+
         {/* Hero greeting */}
         <div className="warm-card p-6 space-y-2">
           <div className="flex items-center justify-between">
