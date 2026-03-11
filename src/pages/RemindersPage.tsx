@@ -3,9 +3,10 @@ import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Trash2, Clock } from "lucide-react";
+import { Plus, Trash2, Clock, Bell, BellRing } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { toast } from "sonner";
 
 interface Reminder {
@@ -17,10 +18,54 @@ interface Reminder {
 
 const RemindersPage = () => {
   const { user } = useAuth();
+  const { isSupported, isSubscribed, permission, subscribe } = usePushNotifications();
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [newText, setNewText] = useState("");
   const [newTimes, setNewTimes] = useState<string[]>(["08:00"]);
+  const [testLoading, setTestLoading] = useState(false);
+
+  const testNotification = async () => {
+    if (!user) return;
+    setTestLoading(true);
+    try {
+      // Make sure we're subscribed first
+      if (!isSubscribed) {
+        const ok = await subscribe();
+        if (!ok) {
+          toast.error("Devi prima attivare le notifiche");
+          setTestLoading(false);
+          return;
+        }
+      }
+      
+      const { data, error } = await supabase.functions.invoke("send-push-notification", {
+        body: {
+          user_ids: [user.id],
+          title: "🔥 Test Fire Mind",
+          body: "Le notifiche funzionano! 🎉",
+          data: { type: "reminder" },
+        },
+      });
+      
+      if (error) {
+        console.error("Test push error:", error);
+        toast.error("Errore nell'invio della notifica test");
+      } else {
+        console.log("Test push result:", data);
+        const result = data?.results?.[0];
+        if (result?.success) {
+          toast.success("Notifica inviata! Controlla il telefono");
+        } else {
+          toast.error(`Notifica fallita: ${result?.error || "errore sconosciuto"}`);
+        }
+      }
+    } catch (err) {
+      console.error("Test notification error:", err);
+      toast.error("Errore durante il test");
+    }
+    setTestLoading(false);
+  };
 
   const fetchReminders = async () => {
     const { data } = await supabase
@@ -69,6 +114,29 @@ const RemindersPage = () => {
   return (
     <AppLayout title="I miei promemoria">
       <div className="space-y-4 animate-[fade-in_0.5s_ease-out]">
+        {/* Test notification button */}
+        <Button 
+          onClick={testNotification} 
+          disabled={testLoading}
+          variant="outline"
+          className="w-full h-12 rounded-xl font-bold border-primary text-primary hover:bg-primary/10 transition-colors"
+        >
+          {testLoading ? (
+            <span className="animate-pulse">Invio in corso...</span>
+          ) : (
+            <>
+              <BellRing className="h-5 w-5 mr-2" />
+              {!isSubscribed ? "Attiva e testa notifiche" : "🔔 Testa notifica push"}
+            </>
+          )}
+        </Button>
+
+        {permission === "denied" && (
+          <p className="text-xs text-destructive text-center">
+            ⚠️ Le notifiche sono bloccate nel browser. Vai nelle impostazioni del sito per abilitarle.
+          </p>
+        )}
+
         <Button onClick={() => setShowAdd(!showAdd)} className="warm-gradient-bg w-full h-12 rounded-xl text-primary-foreground font-bold warm-shadow hover:opacity-90 transition-opacity">
           <Plus className="h-5 w-5 mr-2" /> Nuovo promemoria
         </Button>
