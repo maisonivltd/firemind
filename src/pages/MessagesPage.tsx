@@ -2,11 +2,22 @@ import { useState, useEffect, useRef } from "react";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send } from "lucide-react";
+import { Send, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { playMessageSent, playMessageReceived } from "@/hooks/useNotificationSound";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Message {
   id: string;
@@ -20,6 +31,7 @@ const MessagesPage = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const initialLoadDone = useRef(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetch = async () => {
@@ -32,13 +44,11 @@ const MessagesPage = () => {
     };
     fetch();
 
-    // Real-time subscription
     const channel = supabase
       .channel("messages")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
         const msg = payload.new as Message;
         setMessages((prev) => [...prev, msg]);
-        // Play sound only for incoming messages (admin replies), not our own sends
         if (initialLoadDone.current && msg.from_role !== "user") {
           playMessageReceived();
         }
@@ -47,6 +57,10 @@ const MessagesPage = () => {
 
     return () => { supabase.removeChannel(channel); };
   }, []);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !user) return;
@@ -58,6 +72,17 @@ const MessagesPage = () => {
     playMessageSent();
   };
 
+  const clearChat = async () => {
+    if (!user) return;
+    const { error } = await supabase
+      .from("messages")
+      .delete()
+      .eq("user_id", user.id);
+    if (error) { toast.error("Errore nella pulizia della chat"); return; }
+    setMessages([]);
+    toast.success("Chat ripulita!");
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   };
@@ -67,6 +92,33 @@ const MessagesPage = () => {
   return (
     <AppLayout title="Messaggi">
       <div className="flex flex-col animate-[fade-in_0.5s_ease-out]" style={{ minHeight: "calc(100vh - 180px)" }}>
+        {/* Header with clear button */}
+        {messages.length > 0 && (
+          <div className="flex justify-end pb-2">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive text-xs gap-1">
+                  <Trash2 className="h-3 w-3" /> Pulisci chat
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Pulisci la chat?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Tutti i messaggi verranno eliminati. Questa azione non può essere annullata.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annulla</AlertDialogCancel>
+                  <AlertDialogAction onClick={clearChat} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Elimina tutto
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        )}
+
         <div className="flex-1 space-y-3 pb-4">
           {messages.length === 0 && (
             <div className="py-12 text-center text-muted-foreground">
@@ -86,6 +138,7 @@ const MessagesPage = () => {
               </div>
             </div>
           ))}
+          <div ref={messagesEndRef} />
         </div>
 
         <div className="sticky bottom-20 flex gap-2 bg-background py-3">
