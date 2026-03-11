@@ -8,8 +8,18 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // Use Europe/Rome timezone for Italian users
     const now = new Date();
-    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const italyTime = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/Rome",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(now);
+
+    const currentTime = italyTime; // e.g. "09:30"
+
+    console.log(`Checking reminders for time: ${currentTime} (Italy)`);
 
     // Get active reminders that match the current time
     const { data: reminders, error } = await supabase
@@ -19,6 +29,9 @@ serve(async (req) => {
       .contains("times", [currentTime]);
 
     if (error) throw error;
+
+    console.log(`Found ${reminders?.length || 0} reminders matching ${currentTime}`);
+
     if (!reminders || reminders.length === 0) {
       return new Response(JSON.stringify({ message: "No reminders to send", time: currentTime }), {
         headers: { 'Content-Type': 'application/json' },
@@ -30,6 +43,7 @@ serve(async (req) => {
     const results = [];
 
     for (const reminder of reminders) {
+      console.log(`Sending reminder "${reminder.text}" to user ${reminder.user_id}`);
       const res = await fetch(functionUrl, {
         method: "POST",
         headers: {
@@ -44,6 +58,7 @@ serve(async (req) => {
         }),
       });
       const result = await res.json();
+      console.log(`Result for reminder ${reminder.id}:`, JSON.stringify(result));
       results.push({ reminder_id: reminder.id, ...result });
     }
 
@@ -55,6 +70,7 @@ serve(async (req) => {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
+    console.error("check-reminders error:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
