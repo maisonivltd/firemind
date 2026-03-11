@@ -87,14 +87,12 @@ export function usePushNotifications() {
     if (!isSupported) return;
 
     try {
-      const reg = await navigator.serviceWorker.getRegistration("/push-sw.js");
-      if (reg) {
-        const sub = await reg.pushManager.getSubscription();
-        if (sub) {
-          const endpoint = sub.endpoint;
-          await sub.unsubscribe();
-          await supabase.from("push_subscriptions").delete().eq("endpoint", endpoint);
-        }
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        const endpoint = sub.endpoint;
+        await sub.unsubscribe();
+        await supabase.from("push_subscriptions").delete().eq("endpoint", endpoint);
       }
       setIsSubscribed(false);
     } catch {
