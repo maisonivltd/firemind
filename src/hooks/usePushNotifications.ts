@@ -29,11 +29,9 @@ export function usePushNotifications() {
 
     const checkSubscription = async () => {
       try {
-        const reg = await navigator.serviceWorker.getRegistration("/push-sw.js");
-        if (reg) {
-          const sub = await reg.pushManager.getSubscription();
-          setIsSubscribed(!!sub);
-        }
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.getSubscription();
+        setIsSubscribed(!!sub);
       } catch {
         // ignore
       }
