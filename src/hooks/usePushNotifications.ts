@@ -29,11 +29,9 @@ export function usePushNotifications() {
 
     const checkSubscription = async () => {
       try {
-        const reg = await navigator.serviceWorker.getRegistration("/push-sw.js");
-        if (reg) {
-          const sub = await reg.pushManager.getSubscription();
-          setIsSubscribed(!!sub);
-        }
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.getSubscription();
+        setIsSubscribed(!!sub);
       } catch {
         // ignore
       }
@@ -50,9 +48,8 @@ export function usePushNotifications() {
       setPermission(perm);
       if (perm !== "granted") return false;
 
-      // Register push service worker
-      const reg = await navigator.serviceWorker.register("/push-sw.js");
-      await navigator.serviceWorker.ready;
+      // Use the PWA service worker (which imports push-sw.js)
+      const reg = await navigator.serviceWorker.ready;
 
       // Subscribe to push
       const subscription = await reg.pushManager.subscribe({
@@ -90,14 +87,12 @@ export function usePushNotifications() {
     if (!isSupported) return;
 
     try {
-      const reg = await navigator.serviceWorker.getRegistration("/push-sw.js");
-      if (reg) {
-        const sub = await reg.pushManager.getSubscription();
-        if (sub) {
-          const endpoint = sub.endpoint;
-          await sub.unsubscribe();
-          await supabase.from("push_subscriptions").delete().eq("endpoint", endpoint);
-        }
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        const endpoint = sub.endpoint;
+        await sub.unsubscribe();
+        await supabase.from("push_subscriptions").delete().eq("endpoint", endpoint);
       }
       setIsSubscribed(false);
     } catch {
