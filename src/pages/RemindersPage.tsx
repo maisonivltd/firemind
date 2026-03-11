@@ -18,10 +18,54 @@ interface Reminder {
 
 const RemindersPage = () => {
   const { user } = useAuth();
+  const { isSupported, isSubscribed, permission, subscribe } = usePushNotifications();
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [newText, setNewText] = useState("");
   const [newTimes, setNewTimes] = useState<string[]>(["08:00"]);
+  const [testLoading, setTestLoading] = useState(false);
+
+  const testNotification = async () => {
+    if (!user) return;
+    setTestLoading(true);
+    try {
+      // Make sure we're subscribed first
+      if (!isSubscribed) {
+        const ok = await subscribe();
+        if (!ok) {
+          toast.error("Devi prima attivare le notifiche");
+          setTestLoading(false);
+          return;
+        }
+      }
+      
+      const { data, error } = await supabase.functions.invoke("send-push-notification", {
+        body: {
+          user_ids: [user.id],
+          title: "🔥 Test Fire Mind",
+          body: "Le notifiche funzionano! 🎉",
+          data: { type: "reminder" },
+        },
+      });
+      
+      if (error) {
+        console.error("Test push error:", error);
+        toast.error("Errore nell'invio della notifica test");
+      } else {
+        console.log("Test push result:", data);
+        const result = data?.results?.[0];
+        if (result?.success) {
+          toast.success("Notifica inviata! Controlla il telefono");
+        } else {
+          toast.error(`Notifica fallita: ${result?.error || "errore sconosciuto"}`);
+        }
+      }
+    } catch (err) {
+      console.error("Test notification error:", err);
+      toast.error("Errore durante il test");
+    }
+    setTestLoading(false);
+  };
 
   const fetchReminders = async () => {
     const { data } = await supabase
