@@ -18,90 +18,10 @@ interface Reminder {
 
 const RemindersPage = () => {
   const { user } = useAuth();
-  const { isSubscribed, permission, subscribe } = usePushNotifications();
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [newText, setNewText] = useState("");
   const [newTimes, setNewTimes] = useState<string[]>(["08:00"]);
-  const [testLoading, setTestLoading] = useState(false);
-  const [testResponse, setTestResponse] = useState("");
-
-  const testNotification = async () => {
-    if (!user) return;
-    setTestLoading(true);
-    setTestResponse("");
-
-    const requestPayload = {
-      user_ids: [user.id],
-      title: "🔥 Test Fire Mind",
-      body: "Le notifiche funzionano! 🎉",
-      data: { type: "reminder" },
-    };
-
-    try {
-      // Make sure we're subscribed first
-      if (!isSubscribed) {
-        const ok = await subscribe();
-        if (!ok) {
-          const debug = {
-            step: "subscribe",
-            success: false,
-            permission,
-            error: "Subscription failed or notification permission denied",
-          };
-          setTestResponse(JSON.stringify(debug, null, 2));
-          toast.error("Devi prima attivare le notifiche");
-          setTestLoading(false);
-          return;
-        }
-      }
-
-      const { data, error } = await supabase.functions.invoke("send-push-notification", {
-        body: requestPayload,
-      });
-
-      const debug = {
-        timestamp: new Date().toISOString(),
-        request: requestPayload,
-        response: data ?? null,
-        error: error
-          ? {
-              name: error.name,
-              message: error.message,
-              context: (error as { context?: unknown }).context ?? null,
-            }
-          : null,
-      };
-      setTestResponse(JSON.stringify(debug, null, 2));
-
-      if (error) {
-        console.error("Test push error:", error);
-        toast.error("Errore nell'invio della notifica test");
-      } else {
-        console.log("Test push result:", data);
-        const result = data?.results?.[0];
-        if (result?.success) {
-          toast.success("Notifica inviata! Controlla il telefono");
-        } else {
-          toast.error(`Notifica fallita: ${result?.error || "errore sconosciuto"}`);
-        }
-      }
-    } catch (err) {
-      console.error("Test notification error:", err);
-      const debug = {
-        timestamp: new Date().toISOString(),
-        request: requestPayload,
-        response: null,
-        caughtError:
-          err instanceof Error
-            ? { name: err.name, message: err.message, stack: err.stack }
-            : err,
-      };
-      setTestResponse(JSON.stringify(debug, null, 2));
-      toast.error("Errore durante il test");
-    }
-    setTestLoading(false);
-  };
 
   const fetchReminders = async () => {
     const { data } = await supabase
