@@ -74,37 +74,7 @@ const RemindersPage = () => {
   return (
     <AppLayout title="I miei promemoria">
       <div className="space-y-4 animate-[fade-in_0.5s_ease-out]">
-        {/* Test notification button */}
-        <Button
-          onClick={testNotification}
-          disabled={testLoading}
-          variant="outline"
-          className="w-full h-12 rounded-xl font-bold border-primary text-primary hover:bg-primary/10 transition-colors"
-        >
-          {testLoading ? (
-            <span className="animate-pulse">Invio in corso...</span>
-          ) : (
-            <>
-              <BellRing className="h-5 w-5 mr-2" />
-              {!isSubscribed ? "Attiva e testa notifiche" : "🔔 Testa notifica push"}
-            </>
-          )}
-        </Button>
 
-        {permission === "denied" && (
-          <p className="text-xs text-destructive text-center">
-            ⚠️ Le notifiche sono bloccate nel browser. Vai nelle impostazioni del sito per abilitarle.
-          </p>
-        )}
-
-        {testResponse && (
-          <div className="rounded-2xl border border-border bg-muted/30 p-3 space-y-2">
-            <p className="text-xs font-semibold text-foreground">Debug risposta notifica push</p>
-            <pre className="max-h-64 overflow-auto rounded-lg bg-background p-2 text-xs text-foreground whitespace-pre-wrap break-all">
-              {testResponse}
-            </pre>
-          </div>
-        )}
 
         <Button
           onClick={() => setShowAdd(!showAdd)}
