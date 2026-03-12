@@ -59,15 +59,13 @@ export function usePushNotifications() {
 
       const subJson = subscription.toJSON();
 
-      // Remove old subscriptions for this user before saving new one
-      await supabase.from("push_subscriptions").delete().eq("user_id", user.id);
-
-      // Save new subscription
-      const { error } = await supabase.from("push_subscriptions").insert({
-        user_id: user.id,
-        endpoint: subJson.endpoint!,
-        p256dh: subJson.keys!.p256dh!,
-        auth: subJson.keys!.auth!,
+      // Save subscription via edge function (bypasses RLS)
+      const { data, error } = await supabase.functions.invoke("subscribe-push", {
+        body: {
+          endpoint: subJson.endpoint!,
+          p256dh: subJson.keys!.p256dh!,
+          auth: subJson.keys!.auth!,
+        },
       });
 
       if (error) {
