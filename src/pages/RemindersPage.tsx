@@ -62,8 +62,18 @@ const RemindersPage = () => {
       toast.error("Errore invio notifica test");
       console.error("Test push error:", error);
     } else {
-      toast.success("Notifica test inviata");
-      console.log("Test push response:", data);
+      const sentCount = typeof data?.sent === "number" ? data.sent : 0;
+      const firstFailure = Array.isArray(data?.results)
+        ? data.results.find((item: { success?: boolean; error?: string }) => item?.success === false)
+        : null;
+
+      if (sentCount < 1) {
+        toast.error(firstFailure?.error || "Nessuna notifica inviata: attiva prima le notifiche su questo telefono");
+        console.warn("Test push response (no delivery):", data);
+      } else {
+        toast.success("Notifica test inviata");
+        console.log("Test push response:", data);
+      }
     }
 
     setTestingReminderId(null);

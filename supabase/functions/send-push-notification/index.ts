@@ -69,6 +69,21 @@ serve(async (req) => {
       throw subscriptionsError;
     }
 
+    if (!subscriptions || subscriptions.length === 0) {
+      return new Response(
+        JSON.stringify({
+          error: "No active push subscriptions found for requested user_ids",
+          sent: 0,
+          total_subscriptions: 0,
+          results: [],
+        }),
+        {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     const payload = JSON.stringify({
       title,
       body,
