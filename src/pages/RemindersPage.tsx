@@ -3,7 +3,7 @@ import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Trash2, Clock } from "lucide-react";
+import { Plus, Trash2, Clock, BellRing } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -21,6 +21,7 @@ const RemindersPage = () => {
   const [showAdd, setShowAdd] = useState(false);
   const [newText, setNewText] = useState("");
   const [newTimes, setNewTimes] = useState<string[]>(["08:00"]);
+  const [testingReminderId, setTestingReminderId] = useState<string | null>(null);
 
   const fetchReminders = async () => {
     const { data } = await supabase
@@ -42,6 +43,30 @@ const RemindersPage = () => {
   const deleteReminder = async (id: string) => {
     await supabase.from("reminders").delete().eq("id", id);
     setReminders((prev) => prev.filter((r) => r.id !== id));
+  };
+
+  const testReminderNotification = async (reminder: Reminder) => {
+    if (!user) return;
+
+    setTestingReminderId(reminder.id);
+    const { data, error } = await supabase.functions.invoke("send-push-notification", {
+      body: {
+        user_ids: [user.id],
+        title: "🔥 Fire Mind - Test promemoria",
+        body: reminder.text,
+        data: { type: "reminder", reminder_id: reminder.id, test: true },
+      },
+    });
+
+    if (error) {
+      toast.error("Errore invio notifica test");
+      console.error("Test push error:", error);
+    } else {
+      toast.success("Notifica test inviata");
+      console.log("Test push response:", data);
+    }
+
+    setTestingReminderId(null);
   };
 
   const addReminder = async () => {
@@ -74,8 +99,6 @@ const RemindersPage = () => {
   return (
     <AppLayout title="I miei promemoria">
       <div className="space-y-4 animate-[fade-in_0.5s_ease-out]">
-
-
         <Button
           onClick={() => setShowAdd(!showAdd)}
           className="warm-gradient-bg w-full h-12 rounded-xl text-primary-foreground font-bold warm-shadow hover:opacity-90 transition-opacity"
@@ -145,12 +168,25 @@ const RemindersPage = () => {
                     </span>
                   ))}
                 </div>
-                <button
-                  onClick={() => deleteReminder(r.id)}
-                  className="text-muted-foreground hover:text-destructive transition-colors"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => testReminderNotification(r)}
+                    disabled={testingReminderId === r.id}
+                    className="h-7 rounded-lg px-2 text-xs"
+                  >
+                    <BellRing className="h-3.5 w-3.5 mr-1" />
+                    Test
+                  </Button>
+                  <button
+                    onClick={() => deleteReminder(r.id)}
+                    className="text-muted-foreground hover:text-destructive transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -168,4 +204,5 @@ const RemindersPage = () => {
 };
 
 export default RemindersPage;
+
 
