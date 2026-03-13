@@ -102,7 +102,7 @@ export function usePushNotifications() {
         try {
           subscription = await reg.pushManager.subscribe({
             userVisibleOnly: true,
-            applicationServerKey: vapidKey,
+            applicationServerKey: vapidKey.buffer as ArrayBuffer,
           });
         } catch (err) {
           if (err instanceof DOMException && err.name === "InvalidStateError") {
@@ -110,7 +110,7 @@ export function usePushNotifications() {
             if (existing) await existing.unsubscribe();
             subscription = await reg.pushManager.subscribe({
               userVisibleOnly: true,
-              applicationServerKey: vapidKey,
+              applicationServerKey: vapidKey.buffer as ArrayBuffer,
             });
           } else {
             throw err;
