@@ -23,6 +23,7 @@ const RemindersPage = () => {
   const [newText, setNewText] = useState("");
   const [newTimes, setNewTimes] = useState<string[]>(["08:00"]);
   const [testingReminderId, setTestingReminderId] = useState<string | null>(null);
+  const [showPhrases, setShowPhrases] = useState(false);
 
   const fetchReminders = async () => {
     const { data } = await supabase
