@@ -126,6 +126,19 @@ const RemindersPage = () => {
               onChange={(e) => setNewText(e.target.value)}
               className="h-12 rounded-xl bg-background text-base"
             />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowPhrases(true)}
+              className="w-full rounded-xl h-10 text-sm"
+            >
+              <List className="h-4 w-4 mr-2" /> Scegli dalla lista
+            </Button>
+            <PresetPhrasesModal
+              open={showPhrases}
+              onOpenChange={setShowPhrases}
+              onSelect={(text) => setNewText(text)}
+            />
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground flex items-center gap-1">
                 <Clock className="h-4 w-4 text-primary" /> Orari notifica
