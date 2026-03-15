@@ -3,7 +3,8 @@ import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Trash2, Clock, BellRing } from "lucide-react";
+import { Plus, Trash2, Clock, BellRing, List } from "lucide-react";
+import PresetPhrasesModal from "@/components/PresetPhrasesModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -22,6 +23,7 @@ const RemindersPage = () => {
   const [newText, setNewText] = useState("");
   const [newTimes, setNewTimes] = useState<string[]>(["08:00"]);
   const [testingReminderId, setTestingReminderId] = useState<string | null>(null);
+  const [showPhrases, setShowPhrases] = useState(false);
 
   const fetchReminders = async () => {
     const { data } = await supabase
@@ -123,6 +125,19 @@ const RemindersPage = () => {
               value={newText}
               onChange={(e) => setNewText(e.target.value)}
               className="h-12 rounded-xl bg-background text-base"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowPhrases(true)}
+              className="w-full rounded-xl h-10 text-sm"
+            >
+              <List className="h-4 w-4 mr-2" /> Scegli dalla lista
+            </Button>
+            <PresetPhrasesModal
+              open={showPhrases}
+              onOpenChange={setShowPhrases}
+              onSelect={(text) => setNewText(text)}
             />
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground flex items-center gap-1">
