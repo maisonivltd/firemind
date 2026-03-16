@@ -1,9 +1,10 @@
 import { NavLink as RouterNavLink } from "react-router-dom";
-import { Home, Bell, StickyNote, MessageCircle } from "lucide-react";
+import { Home, Bell, StickyNote, MessageCircle, Inbox } from "lucide-react";
 
 const navItems = [
   { to: "/home", icon: Home, label: "Home" },
   { to: "/reminders", icon: Bell, label: "Promemoria" },
+  { to: "/notifications", icon: Inbox, label: "Ricevute" },
   { to: "/notes", icon: StickyNote, label: "Note" },
   { to: "/messages", icon: MessageCircle, label: "Messaggi" },
 ];

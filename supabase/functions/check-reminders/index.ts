@@ -8,7 +8,6 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Use Europe/Rome timezone for Italian users
     const now = new Date();
     const italyTime = new Intl.DateTimeFormat("en-GB", {
       timeZone: "Europe/Rome",
@@ -17,11 +16,9 @@ serve(async (req) => {
       hour12: false,
     }).format(now);
 
-    const currentTime = italyTime; // e.g. "09:30"
-
+    const currentTime = italyTime;
     console.log(`Checking reminders for time: ${currentTime} (Italy)`);
 
-    // Get active reminders that match the current time
     const { data: reminders, error } = await supabase
       .from("reminders")
       .select("*")
@@ -29,26 +26,33 @@ serve(async (req) => {
       .contains("times", [currentTime]);
 
     if (error) throw error;
-
     console.log(`Found ${reminders?.length || 0} reminders matching ${currentTime}`);
 
     if (!reminders || reminders.length === 0) {
       return new Response(JSON.stringify({ message: "No reminders to send", time: currentTime }), {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       });
     }
 
-    // Send push notification for each reminder
     const functionUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-push-notification`;
     const results = [];
 
     for (const reminder of reminders) {
       console.log(`Sending reminder "${reminder.text}" to user ${reminder.user_id}`);
+
+      // Log notification to DB so user can view it later
+      await supabase.from("notification_log").insert({
+        user_id: reminder.user_id,
+        text: reminder.text,
+        title: "🔥 Fire Mind - Promemoria",
+        reminder_id: reminder.id,
+      });
+
       const res = await fetch(functionUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
         },
         body: JSON.stringify({
           user_ids: [reminder.user_id],
@@ -62,18 +66,15 @@ serve(async (req) => {
       results.push({ reminder_id: reminder.id, ...result });
     }
 
-    return new Response(JSON.stringify({ 
-      time: currentTime, 
-      reminders_found: reminders.length, 
-      results 
-    }), {
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ time: currentTime, reminders_found: reminders.length, results }),
+      { headers: { "Content-Type": "application/json" } }
+    );
   } catch (error) {
     console.error("check-reminders error:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
     });
   }
 });

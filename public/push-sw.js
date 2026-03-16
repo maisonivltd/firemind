@@ -36,7 +36,7 @@ self.addEventListener("notificationclick", (event) => {
   if (data?.type === "message" || data?.type === "broadcast") {
     url = "/messages";
   } else if (data?.type === "reminder") {
-    url = "/reminders";
+    url = "/notifications";
   }
 
   event.waitUntil(
