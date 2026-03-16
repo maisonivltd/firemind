@@ -62,6 +62,41 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_log: {
+        Row: {
+          created_at: string
+          id: string
+          reminder_id: string | null
+          text: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reminder_id?: string | null
+          text: string
+          title?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reminder_id?: string | null
+          text?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_log_reminder_id_fkey"
+            columns: ["reminder_id"]
+            isOneToOne: false
+            referencedRelation: "reminders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       preset_phrases: {
         Row: {
           created_at: string
