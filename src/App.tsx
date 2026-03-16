@@ -11,6 +11,7 @@ import RemindersPage from "./pages/RemindersPage";
 import NotesPage from "./pages/NotesPage";
 import MessagesPage from "./pages/MessagesPage";
 import AdminPage from "./pages/AdminPage";
+import NotificationsPage from "./pages/NotificationsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
